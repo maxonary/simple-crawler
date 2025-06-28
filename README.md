@@ -1,15 +1,16 @@
 # Simple Web Crawler
 
-A lightweight web crawler with a beautiful Streamlit frontend that allows you to crawl multiple URLs and get full page contents.
+A lightweight web crawler with a beautiful Streamlit frontend that allows you to crawl multiple URLs and extract clean body content along with all discovered links.
 
 ## Features
 
 - 🕷️ **Simple URL Input**: Enter single URLs or multiple URLs at once
-- 📄 **Full Page Contents**: Get complete HTML/text content from each page
-- 📊 **Response Details**: View status codes, content types, and encoding information
-- 📥 **Export Results**: Download crawl results as JSON or individual HTML files
+- 📄 **Clean Body Content**: Extract main content without scripts, styles, and navigation
+- 🔗 **Link Discovery**: Find all internal and external links on each page
+- 📊 **Smart Content Extraction**: Intelligently targets main content areas
+- 📥 **Export Results**: Download crawl results as JSON or individual text files
 - 🎨 **Beautiful UI**: Modern Streamlit interface with real-time statistics
-- ⚡ **Fast & Efficient**: Built with requests for optimal performance
+- ⚡ **Fast & Efficient**: Built with requests and BeautifulSoup for optimal performance
 
 ## Installation
 
@@ -19,7 +20,13 @@ A lightweight web crawler with a beautiful Streamlit frontend that allows you to
    cd simple-crawler
    ```
 
-2. **Install dependencies:**
+2. **Create a virtual environment (recommended):**
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   ```
+
+3. **Install dependencies:**
    ```bash
    pip install -r requirements.txt
    ```
@@ -42,26 +49,58 @@ A lightweight web crawler with a beautiful Streamlit frontend that allows you to
 
 5. **View results** in the expandable sections below
 
-6. **Download content** as individual HTML files or export all results as JSON
+6. **Explore discovered links** in the expandable link sections
 
-## What the Crawler Returns
+7. **Download content** as individual text files or export all results as JSON
+
+## What the Crawler Extracts
 
 For each successfully crawled URL, you'll get:
 
-- **Full Page Content**: Complete HTML/text content of the page
+### Content Information
+- **Main Body Content**: Clean text content from the main content area
+- **Content Length**: Total number of characters
 - **Response Status**: HTTP status code
 - **Content Type**: MIME type of the response
 - **Encoding**: Character encoding used
-- **Content Length**: Total number of characters
-- **Error Information**: Detailed error messages for failed crawls
+
+### Link Discovery
+- **Internal Links**: All links pointing to the same domain
+- **External Links**: All links pointing to other domains
+- **Total Links**: Complete count of all discovered links
+- **Link Lists**: Expandable sections showing the actual URLs
+
+### Error Information
+- **Detailed error messages** for failed crawls
+- **Network timeout handling**
+- **Graceful fallbacks** for parsing issues
+
+## Smart Content Extraction
+
+The crawler intelligently extracts content by:
+
+1. **Removing unwanted elements**: scripts, styles, navigation, headers, footers
+2. **Targeting main content areas**: looks for `<main>`, `<article>`, `.content`, etc.
+3. **Falling back gracefully**: uses body content if no specific content area is found
+4. **Cleaning up text**: removes extra whitespace and formats nicely
+
+## Link Discovery Features
+
+The crawler discovers and categorizes all links:
+
+- **Internal Links**: Links to the same domain (useful for site mapping)
+- **External Links**: Links to other domains (useful for backlink analysis)
+- **Duplicate Removal**: Automatically removes duplicate links
+- **URL Normalization**: Converts relative URLs to absolute URLs
+- **Smart Filtering**: Skips javascript:, mailto:, tel:, and other non-HTTP links
 
 ## Example Usage
 
 ### Input URLs:
 ```
 example.com
-https://google.com
 https://github.com
+https://docs.python.org
 ```
 
 ### Sample Output:
@@ -69,19 +108,37 @@ https://github.com
 {
   "url": "https://example.com",
   "status_code": 200,
-  "content": "<!DOCTYPE html><html><head><title>Example Domain</title>...</html>",
+  "content": "Example Domain This domain is for use in illustrative examples...",
   "content_type": "text/html; charset=UTF-8",
   "encoding": "UTF-8",
   "content_length": 1234,
+  "links": {
+    "internal": ["https://example.com/page1", "https://example.com/page2"],
+    "external": ["https://www.iana.org/domains/example"],
+    "all": ["https://example.com/page1", "https://example.com/page2", "https://www.iana.org/domains/example"]
+  },
+  "internal_links_count": 2,
+  "external_links_count": 1,
+  "total_links_count": 3,
   "success": true
 }
 ```
 
+## Use Cases
+
+- **Content Analysis**: Extract clean text from web pages for analysis
+- **Site Mapping**: Discover all pages on a website through internal links
+- **Link Research**: Analyze external links and backlinks
+- **SEO Analysis**: Understand internal linking patterns
+- **Content Monitoring**: Track changes in web page content
+- **Data Collection**: Gather text content from multiple sources
+
 ## Technical Details
 
-- **Backend**: Python with requests library
+- **Backend**: Python with requests and BeautifulSoup
 - **Frontend**: Streamlit for the web interface
-- **Content Handling**: Raw HTML/text content without parsing
+- **Content Parsing**: HTML parser (built into Python, no external dependencies)
+- **Link Processing**: URL normalization and categorization
 - **Rate Limiting**: 1-second delay between requests to be respectful to servers
 
 ## Important Notes
@@ -96,6 +153,23 @@ https://github.com
 
 - Python 3.7+
 - See `requirements.txt` for specific package versions
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Dependency Installation Fails**: 
+   - Make sure you're using a virtual environment
+   - Try updating pip: `pip install --upgrade pip`
+
+2. **Streamlit Not Starting**:
+   - Check if port 8501 is available
+   - Try a different port: `streamlit run app.py --server.port 8502`
+
+3. **Crawling Fails**:
+   - Check your internet connection
+   - Some sites may block automated requests
+   - Try with different URLs
 
 ## License
 

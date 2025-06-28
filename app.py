@@ -19,7 +19,7 @@ if 'results' not in st.session_state:
 
 def main():
     st.title("🕷️ Simple Web Crawler")
-    st.markdown("Enter URLs to crawl and get main body content for each one.")
+    st.markdown("Enter URLs to crawl and get main body content with discovered links for each one.")
     
     # Sidebar for configuration
     with st.sidebar:
@@ -31,6 +31,7 @@ def main():
         st.markdown("**Features:**")
         st.markdown("• Extract main body content (cleaned)")
         st.markdown("• Remove scripts, styles, and navigation")
+        st.markdown("• Discover all internal and external links")
         st.markdown("• Display response status and headers")
         st.markdown("• Show content length and encoding")
         st.markdown("• Export results to JSON")
@@ -56,7 +57,7 @@ def main():
         else:
             url_text = st.text_area(
                 "Enter URLs (one per line):",
-                placeholder="example.com\nhttps://google.com\nhttps://github.com",
+                placeholder="example.com\nhttps://github.com\nhttps://docs.python.org",
                 height=150
             )
             urls = [url.strip() for url in url_text.split('\n') if url.strip()]
@@ -81,6 +82,9 @@ def main():
             if successful > 0:
                 avg_content_length = sum(r.get('content_length', 0) for r in st.session_state.results if r.get('success', False)) / successful
                 st.metric("Avg Content Length", f"{avg_content_length:,.0f} chars")
+                
+                total_links = sum(r.get('total_links_count', 0) for r in st.session_state.results if r.get('success', False))
+                st.metric("Total Links Found", total_links)
     
     # Display results
     if st.session_state.results:
@@ -115,7 +119,7 @@ def main():
                             st.text_area(
                                 "Content",
                                 value=result.get('content', ''),
-                                height=400,
+                                height=300,
                                 key=f"content_{i}",
                                 disabled=True
                             )
@@ -136,7 +140,39 @@ def main():
                                     mime="text/plain",
                                     key=f"download_{i}"
                                 )
-                    else:
+                    
+                    # Display links outside the expander to avoid nesting
+                    links = result.get('links', {})
+                    if links and result.get('success', False):
+                        st.markdown("---")
+                        st.markdown("**Discovered Links:**")
+                        
+                        # Link counts
+                        link_col1, link_col2, link_col3 = st.columns(3)
+                        with link_col1:
+                            st.metric("Internal Links", result.get('internal_links_count', 0))
+                        with link_col2:
+                            st.metric("External Links", result.get('external_links_count', 0))
+                        with link_col3:
+                            st.metric("Total Links", result.get('total_links_count', 0))
+                        
+                        # Show internal links
+                        if links.get('internal'):
+                            st.markdown(f"**🔗 Internal Links ({len(links['internal'])})**")
+                            internal_text = "\n".join([f"{j+1}. {link}" for j, link in enumerate(links['internal'][:20])])
+                            if len(links['internal']) > 20:
+                                internal_text += f"\n... and {len(links['internal']) - 20} more"
+                            st.text_area("Internal Links", value=internal_text, height=150, key=f"internal_{i}")
+                        
+                        # Show external links
+                        if links.get('external'):
+                            st.markdown(f"**🌐 External Links ({len(links['external'])})**")
+                            external_text = "\n".join([f"{j+1}. {link}" for j, link in enumerate(links['external'][:20])])
+                            if len(links['external']) > 20:
+                                external_text += f"\n... and {len(links['external']) - 20} more"
+                            st.text_area("External Links", value=external_text, height=150, key=f"external_{i}")
+                    
+                    if not result.get('success', False):
                         # Failed crawl
                         st.error(f"❌ Crawl failed: {result.get('error', 'Unknown error')}")
     

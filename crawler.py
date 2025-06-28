@@ -3,6 +3,7 @@ import time
 from typing import Dict, Optional
 import re
 from bs4 import BeautifulSoup
+from urllib.parse import urljoin, urlparse
 
 class SimpleCrawler:
     def __init__(self):
@@ -10,6 +11,49 @@ class SimpleCrawler:
         self.session.headers.update({
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
         })
+    
+    def extract_links(self, soup, base_url: str) -> Dict[str, list]:
+        """
+        Extract all links from the page and categorize them
+        """
+        links = {
+            'internal': [],
+            'external': [],
+            'all': []
+        }
+        
+        try:
+            # Find all anchor tags with href
+            for link in soup.find_all('a', href=True):
+                href = link['href'].strip()
+                
+                # Skip empty links, javascript, mailto, etc.
+                if not href or href.startswith(('javascript:', 'mailto:', 'tel:', '#', 'data:')):
+                    continue
+                
+                # Make relative URLs absolute
+                absolute_url = urljoin(base_url, href)
+                
+                # Categorize as internal or external
+                base_domain = urlparse(base_url).netloc
+                link_domain = urlparse(absolute_url).netloc
+                
+                if link_domain == base_domain:
+                    links['internal'].append(absolute_url)
+                else:
+                    links['external'].append(absolute_url)
+                
+                links['all'].append(absolute_url)
+            
+            # Remove duplicates while preserving order
+            links['internal'] = list(dict.fromkeys(links['internal']))
+            links['external'] = list(dict.fromkeys(links['external']))
+            links['all'] = list(dict.fromkeys(links['all']))
+            
+        except Exception as e:
+            print(f"Error extracting links: {e}")
+        
+        return links
     
     def extract_body_content(self, html_content: str) -> str:
         """
@@ -56,15 +100,15 @@ class SimpleCrawler:
             chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
             text_content = ' '.join(chunk for chunk in chunks if chunk)
             
-            return text_content
+            return text_content, soup
             
         except Exception as e:
             # Fallback: return raw HTML if parsing fails
-            return html_content
+            return html_content, None
     
     def crawl_url(self, url: str) -> Dict[str, any]:
         """
-        Crawl a single URL and return main body content
+        Crawl a single URL and return main body content with links
         """
         try:
             # Add http:// if no protocol specified
@@ -75,10 +119,15 @@ class SimpleCrawler:
             response = self.session.get(url, timeout=10)
             response.raise_for_status()
             
-            # Extract body content
-            body_content = self.extract_body_content(response.text)
+            # Extract body content and get soup object
+            body_content, soup = self.extract_body_content(response.text)
             
-            # Return main body content
+            # Extract links if soup is available
+            links = {'internal': [], 'external': [], 'all': []}
+            if soup:
+                links = self.extract_links(soup, url)
+            
+            # Return main body content with links
             return {
                 'url': url,
                 'status_code': response.status_code,
@@ -86,6 +135,10 @@ class SimpleCrawler:
                 'content_type': response.headers.get('content-type', ''),
                 'encoding': response.encoding,
                 'content_length': len(body_content),
+                'links': links,
+                'internal_links_count': len(links['internal']),
+                'external_links_count': len(links['external']),
+                'total_links_count': len(links['all']),
                 'success': True
             }
             
