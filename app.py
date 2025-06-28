@@ -375,18 +375,14 @@ def main():
                     if links.get('internal'):
                         st.markdown(f"**🔗 Internal Links ({len(links['internal'])})**")
                         st.caption("💡 You can edit, copy, or modify the links below:")
-                        internal_text = "\n".join([f"{j+1}. {link}" for j, link in enumerate(links['internal'][:20])])
-                        if len(links['internal']) > 20:
-                            internal_text += f"\n... and {len(links['internal']) - 20} more"
+                        internal_text = "\n".join(links['internal'])
                         st.text_area("Internal Links", value=internal_text, height=150, key=f"internal_{i}")
                     
                     # Show external links
                     if links.get('external'):
                         st.markdown(f"**🌐 External Links ({len(links['external'])})**")
                         st.caption("💡 You can edit, copy, or modify the links below:")
-                        external_text = "\n".join([f"{j+1}. {link}" for j, link in enumerate(links['external'][:20])])
-                        if len(links['external']) > 20:
-                            external_text += f"\n... and {len(links['external']) - 20} more"
+                        external_text = "\n".join(links['external'])
                         st.text_area("External Links", value=external_text, height=150, key=f"external_{i}")
     
     # Footer
