@@ -17,6 +17,9 @@ if 'crawler' not in st.session_state:
 if 'results' not in st.session_state:
     st.session_state.results = []
 
+if 'selected_links' not in st.session_state:
+    st.session_state.selected_links = {}
+
 def main():
     st.title("🕷️ Simple Web Crawler")
     st.markdown("Enter URLs to crawl and get main body content with discovered links for each one.")
@@ -155,27 +158,101 @@ def main():
                         with link_col3:
                             st.metric("Total Links", result.get('total_links_count', 0))
                         
-                        # Show internal links
-                        if links.get('internal'):
-                            st.markdown(f"**🔗 Internal Links ({len(links['internal'])})**")
-                            st.caption("💡 You can edit, copy, or modify the links below:")
-                            internal_text = "\n".join([f"{j+1}. {link}" for j, link in enumerate(links['internal'][:20])])
-                            if len(links['internal']) > 20:
-                                internal_text += f"\n... and {len(links['internal']) - 20} more"
-                            st.text_area("Internal Links", value=internal_text, height=150, key=f"internal_{i}")
+                        # Auto-crawl section
+                        st.markdown("**🚀 Auto-Crawl Discovered Links:**")
                         
-                        # Show external links
+                        # Initialize session state for this result
+                        result_key = f"result_{i}"
+                        if result_key not in st.session_state.selected_links:
+                            st.session_state.selected_links[result_key] = []
+                        
+                        # Collect all links for selection
+                        all_links = []
+                        if links.get('internal'):
+                            all_links.extend(links['internal'])
                         if links.get('external'):
-                            st.markdown(f"**🌐 External Links ({len(links['external'])})**")
-                            st.caption("💡 You can edit, copy, or modify the links below:")
-                            external_text = "\n".join([f"{j+1}. {link}" for j, link in enumerate(links['external'][:20])])
-                            if len(links['external']) > 20:
-                                external_text += f"\n... and {len(links['external']) - 20} more"
-                            st.text_area("External Links", value=external_text, height=150, key=f"external_{i}")
+                            all_links.extend(links['external'])
+                        
+                        if all_links:
+                            st.write("Select links to crawl:")
+                            
+                            # Bulk selection options
+                            col1, col2, col3 = st.columns(3)
+                            with col1:
+                                if st.button("Select All Internal", key=f"select_internal_{i}"):
+                                    st.session_state.selected_links[result_key] = links.get('internal', [])
+                                    st.rerun()
+                            with col2:
+                                if st.button("Select All External", key=f"select_external_{i}"):
+                                    st.session_state.selected_links[result_key] = links.get('external', [])
+                                    st.rerun()
+                            with col3:
+                                if st.button("Clear All", key=f"clear_all_{i}"):
+                                    st.session_state.selected_links[result_key] = []
+                                    st.rerun()
+                            
+                            # Show selected links count
+                            selected_count = len(st.session_state.selected_links[result_key])
+                            if selected_count > 0:
+                                st.markdown(f"**Selected {selected_count} links for crawling:**")
+                                
+                                # Show first few selected links
+                                selected_display = st.session_state.selected_links[result_key][:5]
+                                for link in selected_display:
+                                    st.write(f"• {link}")
+                                if selected_count > 5:
+                                    st.caption(f"... and {selected_count - 5} more")
+                                
+                                # Crawl button
+                                if st.button(f"🕷️ Crawl {selected_count} Selected Links", type="primary", key=f"crawl_selected_{i}"):
+                                    with st.spinner(f"Crawling {selected_count} selected links..."):
+                                        # Add new results to existing results
+                                        new_results = st.session_state.crawler.crawl_multiple_urls(st.session_state.selected_links[result_key])
+                                        st.session_state.results.extend(new_results)
+                                    st.success(f"Added {len(new_results)} new crawl results!")
+                                    # Clear selections after crawling
+                                    st.session_state.selected_links[result_key] = []
+                                    st.rerun()
+                            
+                            # Manual link selection with text input
+                            st.markdown("**Or manually enter links to crawl:**")
+                            manual_links = st.text_area(
+                                "Enter URLs (one per line):",
+                                placeholder="https://example.com\nhttps://another-site.com",
+                                height=100,
+                                key=f"manual_links_{i}"
+                            )
+                            
+                            if manual_links.strip():
+                                manual_urls = [url.strip() for url in manual_links.split('\n') if url.strip()]
+                                if st.button(f"🕷️ Crawl {len(manual_urls)} Manual Links", key=f"crawl_manual_{i}"):
+                                    with st.spinner(f"Crawling {len(manual_urls)} manual links..."):
+                                        new_results = st.session_state.crawler.crawl_multiple_urls(manual_urls)
+                                        st.session_state.results.extend(new_results)
+                                    st.success(f"Added {len(new_results)} new crawl results!")
+                                    st.rerun()
                     
                     if not result.get('success', False):
                         # Failed crawl
                         st.error(f"❌ Crawl failed: {result.get('error', 'Unknown error')}")
+                    
+                    # Show internal links
+                    if links.get('internal'):
+                        st.markdown(f"**🔗 Internal Links ({len(links['internal'])})**")
+                        st.caption("💡 You can edit, copy, or modify the links below:")
+                        internal_text = "\n".join([f"{j+1}. {link}" for j, link in enumerate(links['internal'][:20])])
+                        if len(links['internal']) > 20:
+                            internal_text += f"\n... and {len(links['internal']) - 20} more"
+                        st.text_area("Internal Links", value=internal_text, height=150, key=f"internal_{i}")
+                    
+                    # Show external links
+                    if links.get('external'):
+                        st.markdown(f"**🌐 External Links ({len(links['external'])})**")
+                        st.caption("💡 You can edit, copy, or modify the links below:")
+                        external_text = "\n".join([f"{j+1}. {link}" for j, link in enumerate(links['external'][:20])])
+                        if len(links['external']) > 20:
+                            external_text += f"\n... and {len(links['external']) - 20} more"
+                        st.text_area("External Links", value=external_text, height=150, key=f"external_{i}")
     
     # Footer
     st.markdown("---")

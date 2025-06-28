@@ -7,10 +7,15 @@ A lightweight web crawler with a beautiful Streamlit frontend that allows you to
 - 🕷️ **Simple URL Input**: Enter single URLs or multiple URLs at once
 - 📄 **Clean Body Content**: Extract main content without scripts, styles, and navigation
 - 🔗 **Link Discovery**: Find all internal and external links on each page
-- 📊 **Smart Content Extraction**: Intelligently targets main content areas
+- 📊 **Smart Content Extraction**: Extracts clean main body content by removing scripts, styles, navigation, headers, and footers
 - 📥 **Export Results**: Download crawl results as JSON or individual text files
 - 🎨 **Beautiful UI**: Modern Streamlit interface with real-time statistics
 - ⚡ **Fast & Efficient**: Built with requests and BeautifulSoup for optimal performance
+- **Auto-Crawl Links**: Automatically crawl discovered links with bulk selection options
+- **Response Details**: Shows HTTP status codes, content types, encoding, and content length
+- **Export Options**: Download individual content or export all results as JSON
+- **User-Friendly Interface**: Clean Streamlit interface with expandable sections and metrics
+- **Error Handling**: Graceful handling of failed requests and invalid URLs
 
 ## Installation
 
@@ -33,25 +38,27 @@ A lightweight web crawler with a beautiful Streamlit frontend that allows you to
 
 ## Usage
 
-1. **Start the application:**
+1. **Start the Application**:
    ```bash
    streamlit run app.py
    ```
 
-2. **Open your browser** and navigate to the URL shown in the terminal (usually `http://localhost:8501`)
+2. **Enter URLs**: Choose between single URL or multiple URLs input method
 
-3. **Enter URLs** to crawl:
-   - **Single URL**: Enter one URL at a time
-   - **Multiple URLs**: Enter multiple URLs, one per line
-   - URLs without protocols (e.g., `example.com`) will automatically use `https://`
+3. **Crawl Initial Pages**: Click "Start Crawling" to analyze the pages
 
-4. **Click "Start Crawling"** to begin the crawl process
+4. **Auto-Crawl Discovered Links**: 
+   - Use "Select All Internal" to crawl all internal links
+   - Use "Select All External" to crawl all external links
+   - Or manually enter specific URLs to crawl
+   - Click "Crawl Selected Links" to automatically crawl them
 
-5. **View results** in the expandable sections below
+5. **View Results**: 
+   - Expand each result to see content and links
+   - Copy links from the text areas
+   - Download individual content or export all results
 
-6. **Explore discovered links** in the expandable link sections
-
-7. **Download content** as individual text files or export all results as JSON
+6. **Export Data**: Use the export button to download all results as JSON
 
 ## What the Crawler Extracts
 
