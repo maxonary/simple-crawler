@@ -106,9 +106,10 @@ class SimpleCrawler:
             # Fallback: return raw HTML if parsing fails
             return html_content, None
     
-    def crawl_url(self, url: str) -> Dict[str, any]:
+    def crawl_url(self, url: str, mode: str = "body_only") -> Dict[str, any]:
         """
-        Crawl a single URL and return main body content with links
+        Crawl a single URL and return content with links
+        mode: "body_only" for cleaned text content, "full_page" for complete HTML
         """
         try:
             # Add http:// if no protocol specified
@@ -119,26 +120,31 @@ class SimpleCrawler:
             response = self.session.get(url, timeout=10)
             response.raise_for_status()
             
-            # Extract body content and get soup object
-            body_content, soup = self.extract_body_content(response.text)
+            # Extract content based on mode
+            if mode == "body_only":
+                content, soup = self.extract_body_content(response.text)
+            else:  # full_page mode
+                content = response.text
+                soup = BeautifulSoup(response.text, 'html.parser')
             
             # Extract links if soup is available
             links = {'internal': [], 'external': [], 'all': []}
             if soup:
                 links = self.extract_links(soup, url)
             
-            # Return main body content with links
+            # Return content with links
             return {
                 'url': url,
                 'status_code': response.status_code,
-                'content': body_content,
+                'content': content,
                 'content_type': response.headers.get('content-type', ''),
                 'encoding': response.encoding,
-                'content_length': len(body_content),
+                'content_length': len(content),
                 'links': links,
                 'internal_links_count': len(links['internal']),
                 'external_links_count': len(links['external']),
                 'total_links_count': len(links['all']),
+                'mode': mode,
                 'success': True
             }
             
@@ -155,15 +161,16 @@ class SimpleCrawler:
                 'success': False
             }
     
-    def crawl_multiple_urls(self, urls: list) -> list:
+    def crawl_multiple_urls(self, urls: list, mode: str = "body_only") -> list:
         """
         Crawl multiple URLs with a small delay between requests
+        mode: "body_only" for cleaned text content, "full_page" for complete HTML
         """
         results = []
         for url in urls:
             url = url.strip()
             if url:  # Skip empty URLs
-                result = self.crawl_url(url)
+                result = self.crawl_url(url, mode)
                 results.append(result)
                 time.sleep(1)  # Be polite to servers
         return results 

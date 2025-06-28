@@ -29,6 +29,13 @@ def main():
         st.header("Configuration")
         st.markdown("**Crawler Settings**")
         st.info("The crawler will automatically add 'https://' if no protocol is specified.")
+        st.info("Auto-discovery for internal links works best in 'Full Page' mode.")
+        # Mode selection
+        crawl_mode = st.selectbox(
+            "Crawl Mode:",
+            ["Body Only", "Full Page"],
+            help="Body Only: Extract clean main content. Full Page: Get complete HTML page."
+        )
         
         st.markdown("---")
         st.markdown("**Features:**")
@@ -69,7 +76,9 @@ def main():
         if st.button("🕷️ Start Crawling", type="primary", disabled=not urls):
             if urls:
                 with st.spinner("Crawling URLs..."):
-                    st.session_state.results = st.session_state.crawler.crawl_multiple_urls(urls)
+                    # Convert mode selection to crawler parameter
+                    mode = "body_only" if crawl_mode == "Body Only" else "full_page"
+                    st.session_state.results = st.session_state.crawler.crawl_multiple_urls(urls, mode)
                 st.success(f"Crawled {len(st.session_state.results)} URLs!")
     
     with col2:
@@ -118,7 +127,8 @@ def main():
                         col1, col2 = st.columns([3, 1])
                         
                         with col1:
-                            st.markdown("**Main Body Content:**")
+                            content_label = "Full Page Content" if result.get('mode') == 'full_page' else "Main Body Content"
+                            st.markdown(f"**{content_label}:**")
                             st.text_area(
                                 "Content",
                                 value=result.get('content', ''),
@@ -132,6 +142,7 @@ def main():
                             st.write(f"Content Type: {result.get('content_type', 'N/A')}")
                             st.write(f"Encoding: {result.get('encoding', 'N/A')}")
                             st.write(f"Content Length: {result.get('content_length', 0):,} characters")
+                            st.write(f"Mode: {result.get('mode', 'N/A').replace('_', ' ').title()}")
                             
                             # Download individual content
                             if st.button(f"📥 Download Content {i+1}"):
@@ -207,7 +218,8 @@ def main():
                                 if st.button(f"🕷️ Crawl {selected_count} Selected Links", type="primary", key=f"crawl_selected_{i}"):
                                     with st.spinner(f"Crawling {selected_count} selected links..."):
                                         # Add new results to existing results
-                                        new_results = st.session_state.crawler.crawl_multiple_urls(st.session_state.selected_links[result_key])
+                                        mode = "body_only" if crawl_mode == "Body Only" else "full_page"
+                                        new_results = st.session_state.crawler.crawl_multiple_urls(st.session_state.selected_links[result_key], mode)
                                         st.session_state.results.extend(new_results)
                                     st.success(f"Added {len(new_results)} new crawl results!")
                                     # Clear selections after crawling
@@ -227,7 +239,8 @@ def main():
                                 manual_urls = [url.strip() for url in manual_links.split('\n') if url.strip()]
                                 if st.button(f"🕷️ Crawl {len(manual_urls)} Manual Links", key=f"crawl_manual_{i}"):
                                     with st.spinner(f"Crawling {len(manual_urls)} manual links..."):
-                                        new_results = st.session_state.crawler.crawl_multiple_urls(manual_urls)
+                                        mode = "body_only" if crawl_mode == "Body Only" else "full_page"
+                                        new_results = st.session_state.crawler.crawl_multiple_urls(manual_urls, mode)
                                         st.session_state.results.extend(new_results)
                                     st.success(f"Added {len(new_results)} new crawl results!")
                                     st.rerun()

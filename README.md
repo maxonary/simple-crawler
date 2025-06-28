@@ -16,6 +16,7 @@ A lightweight web crawler with a beautiful Streamlit frontend that allows you to
 - **Export Options**: Download individual content or export all results as JSON
 - **User-Friendly Interface**: Clean Streamlit interface with expandable sections and metrics
 - **Error Handling**: Graceful handling of failed requests and invalid URLs
+- **Dual Crawl Modes**: Choose between "Body Only" (clean text content) or "Full Page" (complete HTML)
 
 ## Installation
 
@@ -43,22 +44,24 @@ A lightweight web crawler with a beautiful Streamlit frontend that allows you to
    streamlit run app.py
    ```
 
-2. **Enter URLs**: Choose between single URL or multiple URLs input method
+2. **Select Crawl Mode**: Choose between "Body Only" (clean text) or "Full Page" (complete HTML) in the sidebar
 
-3. **Crawl Initial Pages**: Click "Start Crawling" to analyze the pages
+3. **Enter URLs**: Choose between single URL or multiple URLs input method
 
-4. **Auto-Crawl Discovered Links**: 
+4. **Crawl Initial Pages**: Click "Start Crawling" to analyze the pages
+
+5. **Auto-Crawl Discovered Links**: 
    - Use "Select All Internal" to crawl all internal links
    - Use "Select All External" to crawl all external links
    - Or manually enter specific URLs to crawl
    - Click "Crawl Selected Links" to automatically crawl them
 
-5. **View Results**: 
+6. **View Results**: 
    - Expand each result to see content and links
    - Copy links from the text areas
    - Download individual content or export all results
 
-6. **Export Data**: Use the export button to download all results as JSON
+7. **Export Data**: Use the export button to download all results as JSON
 
 ## What the Crawler Extracts
 
