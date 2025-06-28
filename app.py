@@ -120,8 +120,7 @@ def main():
                                 "Content",
                                 value=result.get('content', ''),
                                 height=300,
-                                key=f"content_{i}",
-                                disabled=True
+                                key=f"content_{i}"
                             )
                         
                         with col2:
@@ -159,6 +158,7 @@ def main():
                         # Show internal links
                         if links.get('internal'):
                             st.markdown(f"**🔗 Internal Links ({len(links['internal'])})**")
+                            st.caption("💡 You can edit, copy, or modify the links below:")
                             internal_text = "\n".join([f"{j+1}. {link}" for j, link in enumerate(links['internal'][:20])])
                             if len(links['internal']) > 20:
                                 internal_text += f"\n... and {len(links['internal']) - 20} more"
@@ -167,6 +167,7 @@ def main():
                         # Show external links
                         if links.get('external'):
                             st.markdown(f"**🌐 External Links ({len(links['external'])})**")
+                            st.caption("💡 You can edit, copy, or modify the links below:")
                             external_text = "\n".join([f"{j+1}. {link}" for j, link in enumerate(links['external'][:20])])
                             if len(links['external']) > 20:
                                 external_text += f"\n... and {len(links['external']) - 20} more"
