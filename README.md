@@ -17,6 +17,7 @@ A lightweight web crawler with a beautiful Streamlit frontend that allows you to
 - **User-Friendly Interface**: Clean Streamlit interface with expandable sections and metrics
 - **Error Handling**: Graceful handling of failed requests and invalid URLs
 - **Dual Crawl Modes**: Choose between "Body Only" (clean text content) or "Full Page" (complete HTML)
+- **LLM-Optimized Exports**: Multiple export formats specifically designed for LLM consumption
 
 ## Installation
 
@@ -183,4 +184,32 @@ https://docs.python.org
 
 ## License
 
-This project is open source and available under the MIT License. 
+This project is open source and available under the MIT License.
+
+## LLM Integration
+
+The crawler includes specialized export options optimized for Large Language Model consumption:
+
+### Export Formats for LLMs
+
+1. **🤖 LLM Text Export**: Clean, structured text format with metadata
+2. **📝 LLM Markdown Export**: Markdown-formatted content for better LLM parsing
+3. **🔧 Structured JSON Export**: API-ready JSON with cleaned content and metadata
+
+### Best Practices for LLM Usage
+
+- **Content Length**: Most LLMs work best with 4K-8K tokens per context
+- **Mode Selection**: Use "Body Only" for analysis tasks, "Full Page" for web scraping
+- **Content Cleaning**: Automatically removes scripts, styles, and navigation elements
+- **Link Limiting**: Includes only the most relevant links to prevent context overflow
+- **Metadata Preservation**: Maintains URL, status, and content type information
+
+### LLM Utilities
+
+The `llm_utils.py` module provides additional utilities:
+- Content cleaning and optimization
+- Prompt context generation
+- Structured data creation
+- Best practices documentation
+
+Click "📚 Show LLM Best Practices" in the sidebar for detailed guidelines. 

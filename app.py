@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from crawler import SimpleCrawler
 import json
+import time
 
 # Page configuration
 st.set_page_config(
@@ -45,6 +46,11 @@ def main():
         st.markdown("• Display response status and headers")
         st.markdown("• Show content length and encoding")
         st.markdown("• Export results to JSON")
+        
+        # LLM Best Practices
+        if st.button("📚 Show LLM Best Practices"):
+            from llm_utils import get_llm_best_practices
+            st.markdown(get_llm_best_practices())
     
     # Main content area
     col1, col2 = st.columns([2, 1])
@@ -115,6 +121,122 @@ def main():
                     label="Download JSON",
                     data=json_str,
                     file_name="crawl_results.json",
+                    mime="application/json"
+                )
+            
+            # LLM-optimized export options
+            st.markdown("**LLM Export Options:**")
+            
+            # Export as structured text for LLMs
+            if st.button("🤖 Export for LLM (Text)"):
+                llm_text = ""
+                for i, result in enumerate(st.session_state.results):
+                    if result.get('success', False):
+                        llm_text += f"=== URL {i+1}: {result['url']} ===\n"
+                        llm_text += f"Mode: {result.get('mode', 'N/A').replace('_', ' ').title()}\n"
+                        llm_text += f"Content Length: {result.get('content_length', 0):,} characters\n"
+                        llm_text += f"Internal Links: {result.get('internal_links_count', 0)}\n"
+                        llm_text += f"External Links: {result.get('external_links_count', 0)}\n"
+                        llm_text += f"Status: {result.get('status_code')}\n\n"
+                        llm_text += f"CONTENT:\n{result.get('content', '')}\n\n"
+                        llm_text += "---\n\n"
+                
+                st.download_button(
+                    label="Download LLM Text",
+                    data=llm_text,
+                    file_name="crawl_results_for_llm.txt",
+                    mime="text/plain"
+                )
+            
+            # Export as markdown for better LLM parsing
+            if st.button("📝 Export for LLM (Markdown)"):
+                markdown_content = "# Web Crawl Results\n\n"
+                for i, result in enumerate(st.session_state.results):
+                    if result.get('success', False):
+                        markdown_content += f"## {i+1}. {result['url']}\n\n"
+                        markdown_content += f"**Mode:** {result.get('mode', 'N/A').replace('_', ' ').title()}\n\n"
+                        markdown_content += f"**Stats:**\n"
+                        markdown_content += f"- Content Length: {result.get('content_length', 0):,} characters\n"
+                        markdown_content += f"- Internal Links: {result.get('internal_links_count', 0)}\n"
+                        markdown_content += f"- External Links: {result.get('external_links_count', 0)}\n"
+                        markdown_content += f"- Status Code: {result.get('status_code')}\n\n"
+                        
+                        # Add content
+                        markdown_content += f"**Content:**\n\n{result.get('content', '')}\n\n"
+                        
+                        # Add links if available
+                        links = result.get('links', {})
+                        if links.get('internal') or links.get('external'):
+                            markdown_content += "**Discovered Links:**\n\n"
+                            if links.get('internal'):
+                                markdown_content += "### Internal Links:\n"
+                                for link in links['internal'][:10]:  # Limit to first 10
+                                    markdown_content += f"- {link}\n"
+                                if len(links['internal']) > 10:
+                                    markdown_content += f"- ... and {len(links['internal']) - 10} more\n"
+                                markdown_content += "\n"
+                            
+                            if links.get('external'):
+                                markdown_content += "### External Links:\n"
+                                for link in links['external'][:10]:  # Limit to first 10
+                                    markdown_content += f"- {link}\n"
+                                if len(links['external']) > 10:
+                                    markdown_content += f"- ... and {len(links['external']) - 10} more\n"
+                                markdown_content += "\n"
+                        
+                        markdown_content += "---\n\n"
+                
+                st.download_button(
+                    label="Download LLM Markdown",
+                    data=markdown_content,
+                    file_name="crawl_results_for_llm.md",
+                    mime="text/markdown"
+                )
+            
+            # Export as structured JSON for LLM APIs
+            if st.button("🔧 Export for LLM (Structured JSON)"):
+                llm_structured = {
+                    "crawl_session": {
+                        "total_urls": len(st.session_state.results),
+                        "successful_crawls": sum(1 for r in st.session_state.results if r.get('success', False)),
+                        "failed_crawls": sum(1 for r in st.session_state.results if not r.get('success', False)),
+                        "timestamp": time.strftime("%Y-%m-%d %H:%M:%S")
+                    },
+                    "pages": []
+                }
+                
+                for result in st.session_state.results:
+                    if result.get('success', False):
+                        page_data = {
+                            "url": result['url'],
+                            "mode": result.get('mode', 'N/A'),
+                            "status_code": result.get('status_code'),
+                            "content_length": result.get('content_length', 0),
+                            "content": result.get('content', ''),
+                            "metadata": {
+                                "content_type": result.get('content_type', ''),
+                                "encoding": result.get('encoding', ''),
+                                "internal_links_count": result.get('internal_links_count', 0),
+                                "external_links_count": result.get('external_links_count', 0),
+                                "total_links_count": result.get('total_links_count', 0)
+                            }
+                        }
+                        
+                        # Add links if available
+                        links = result.get('links', {})
+                        if links:
+                            page_data["links"] = {
+                                "internal": links.get('internal', [])[:20],  # Limit for LLM context
+                                "external": links.get('external', [])[:20]
+                            }
+                        
+                        llm_structured["pages"].append(page_data)
+                
+                structured_json = json.dumps(llm_structured, indent=2)
+                st.download_button(
+                    label="Download Structured JSON",
+                    data=structured_json,
+                    file_name="crawl_results_structured.json",
                     mime="application/json"
                 )
         
