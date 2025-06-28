@@ -19,7 +19,7 @@ if 'results' not in st.session_state:
 
 def main():
     st.title("🕷️ Simple Web Crawler")
-    st.markdown("Enter URLs to crawl and get full page contents for each one.")
+    st.markdown("Enter URLs to crawl and get main body content for each one.")
     
     # Sidebar for configuration
     with st.sidebar:
@@ -29,7 +29,8 @@ def main():
         
         st.markdown("---")
         st.markdown("**Features:**")
-        st.markdown("• Get full page contents (HTML/text)")
+        st.markdown("• Extract main body content (cleaned)")
+        st.markdown("• Remove scripts, styles, and navigation")
         st.markdown("• Display response status and headers")
         st.markdown("• Show content length and encoding")
         st.markdown("• Export results to JSON")
@@ -110,7 +111,7 @@ def main():
                         col1, col2 = st.columns([3, 1])
                         
                         with col1:
-                            st.markdown("**Full Page Contents:**")
+                            st.markdown("**Main Body Content:**")
                             st.text_area(
                                 "Content",
                                 value=result.get('content', ''),
@@ -131,8 +132,8 @@ def main():
                                 st.download_button(
                                     label="Download",
                                     data=result.get('content', ''),
-                                    file_name=f"content_{i+1}.html",
-                                    mime="text/html",
+                                    file_name=f"content_{i+1}.txt",
+                                    mime="text/plain",
                                     key=f"download_{i}"
                                 )
                     else:
@@ -144,7 +145,7 @@ def main():
     st.markdown(
         """
         <div style='text-align: center; color: #666;'>
-        <p>Simple Web Crawler - Built with Streamlit and Requests</p>
+        <p>Simple Web Crawler - Built with Streamlit and BeautifulSoup</p>
         <p>⚠️ Please be respectful of websites' robots.txt and rate limiting policies</p>
         </div>
         """,
